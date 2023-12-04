@@ -16,26 +16,68 @@ const Home = () => {
   const [value, setValue] = useState('')
   const [isLoading, setLoading] = useState(false)
   const {toast} = useToast()
+  const [currentData, setCurrentData] = useState('')
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value)
   }
+
   const scrollRef = useRef<ElementRef<"div">>(null)
+
   useEffect(() => {
     scrollRef?.current?.scrollIntoView({behavior: "smooth"})
   }, [messages.length])
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setMessages((current) => [...current, {content: value, role: "user"}])
     setLoading(true)
-    axios.get(`api/chat/chatCompletion?prompt=${value}`).then((res) => {
-      setMessages((current) => [...current, res.data])
-      setLoading(false)
+    setCurrentData('')
+    /*const res1 =  axios.get(`api/chat/connect/12`).then(res=>{
+      axios.get(`api/chat/push_one/12?message=${value}`).then(res=>{
+        console.log('222')
+      })
+    })*/
+
+    /*axios.get(`api/chat/stream?id=12&prompt=${value}`, {
+      responseType: "blob"
+    }).then((res) => {
+      console.log('res');
+      console.log(res);
+      // setMessages((current) => [...current, res.data])
+      // setLoading(false)
     }).catch(() => {
       setLoading(false)
       toast({description: "出错了，请重新输入！", variant: "destructive"})
-    })
+    })*/
+    // const eventSource = new EventSource(`api/chat/stream?id=12&prompt=${value}`);
+    const eventSource = new EventSource(`http://localhost:3000/sse`);
+    eventSource.addEventListener('open', () => {
+      console.log("建立连接。。。");
+      setMessages((pre) => [...pre, {content: '', role: "assistant"}])
+      setLoading(true)
+    }, false)
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data).message
+      setCurrentData(prev => prev + data)
+      setLoading(false)
+    }
+    eventSource.onerror = (e) => {
+      console.log('连接关闭')
+      console.log(e)
+    }
     setValue('')
   }
+
+  useEffect(() => {
+    const data = [...messages]
+    const last = data[data.length - 1]
+    if (last) {
+      last.content = currentData
+    }
+    setMessages(data)
+  }, [currentData])
+
   return (
     <div className={"h-screen bg-secondary"}>
       <MobileSidebar/>
@@ -43,9 +85,9 @@ const Home = () => {
         <Sidebar/>
       </div>
       <div className={"w-full border md:left-32 fixed bottom-0 flex items-center justify-center bg-secondary"}>
-        <FormInput input={value} handleInputChange={handleInputChange} onSubmit={onSubmit} isLoading={isLoading}/>
+        <FormInput input={value} handleInputChange={handleInputChange} onSubmit={onSubmit} isLoading={false}/>
       </div>
-      <div className={"border-solid border-r-amber-400 relative top-0  md:pl-72 md:pr-4 py-2 overflow-auto"}
+      <div className={"border-solid border-r-amber-400 relative top-0 md:pl-72 md:pr-4 py-2 overflow-auto"}
            style={{height: 'calc(100vh - 8rem)'}}>
         {
           messages.length === 0 ? <div className={"flex items-center justify-center text-4xl"}>AI聊天机器人</div> :

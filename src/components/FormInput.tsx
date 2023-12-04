@@ -13,13 +13,13 @@ interface FormInputProps {
 const FormInput: FC<FormInputProps> = ({input, handleInputChange, onSubmit, isLoading}) => {
 
   return (
-    <div className={"flex items-center justify-center w-4/5 py-2"}>
-      <form onSubmit={onSubmit} className={"w-3/4 h-12 flex relative items-center"}>
+    <div className={"flex items-center  w-4/5 py-2 md:justify-center"}>
+      <form onSubmit={onSubmit} className={"w-full md:w-3/4 h-12 flex relative items-center"}>
         <Button className={"bg-black text-white"}>换4.0</Button>
-        <Mic className={"h-8 w-8 px-1 cursor-pointer"}/>
+        <Mic className={"h-8 w-12 px-1 cursor-pointer"}/>
         <Input value={input} onChange={handleInputChange} disabled={isLoading}
-               className={"h-full placeholder:text-primary"} placeholder={"您好，想问点什么?"}/>
-        <Button className={"absolute right-2 top-1 cursor-pointer"}>
+               className={"h-full placeholder:text-primary flex-1 w-full"} placeholder={"您好，想问点什么?"}/>
+        <Button className={"absolute right-2 top-1 cursor-pointer bg-black text-white"}>
           <SendHorizonal />
         </Button>
       </form>
